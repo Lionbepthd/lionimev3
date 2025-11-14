@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lionime - Tempat Nonton Anime Legal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Lionime</div>
+    <nav>
+      <ul>
+        <li><a href="#" onclick="loadAnimeListHome()">Home</a></li>
+        <li><a href="#" onclick="loadAnimeListAll()">List</a></li>
+        <li><a href="#" onclick="loadGenres()">Genre</a></li>
+        <li><a href="#" onclick="loadMovies()">Movie</a></li>
+        <li><a href="#" onclick="loadSchedule()">Jadwal</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Cari judul anime...">
+      <button onclick="searchAnime()">Cari</button>
+    </div>
+    <!-- Anime akan dimuat di sini -->
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
