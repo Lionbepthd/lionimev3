@@ -28,14 +28,24 @@ async function loadStreamingLinks(id) {
     }
 
     data.data.forEach(item => {
+      // Gunakan item.name untuk nama platform
+      const platformName = item.name || 'Platform Tidak Diketahui';
       const link = document.createElement('a');
       link.href = item.url;
-      link.textContent = `Tonton di ${item.site}`;
+      // Ganti teks "Tonton di ..." dengan nama platform
+      link.textContent = `Tonton di ${platformName}`;
       link.target = '_blank';
       link.style.display = 'block';
       link.style.margin = '0.5rem 0';
       link.style.color = '#ff6b6b';
       link.style.textDecoration = 'none';
+
+      // (Opsional) Tambahkan styling untuk efek hover
+      link.style.padding = '0.5rem';
+      link.style.borderRadius = '4px';
+      link.onmouseover = () => link.style.backgroundColor = '#333';
+      link.onmouseout = () => link.style.backgroundColor = '';
+
       streamList.appendChild(link);
     });
   } catch (error) {
