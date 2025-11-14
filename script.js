@@ -1,5 +1,3 @@
-// script.js - Versi menggunakan Jikan API
-
 // Fungsi untuk ambil data dari Jikan API
 async function fetchAnimeDataJikan(url) {
   try {
@@ -38,6 +36,11 @@ function renderJikanAnimeList(animeList, sectionTitle) {
     card.onclick = () => showAnimeDetails(anime.mal_id); // Gunakan ID Jikan
     grid.appendChild(card);
   });
+}
+
+// Fungsi untuk menampilkan detail (akan buka halaman details.html dengan ID Jikan)
+function showAnimeDetails(id) {
+  window.open(`details.html?id=${id}`, '_self');
 }
 
 // Fungsi pencarian (menggunakan Jikan)
@@ -166,9 +169,4 @@ async function loadSchedule() {
     console.error("Error fetching schedule:", error);
     document.querySelector('main').innerHTML = '<p>Gagal memuat jadwal.</p>';
   }
-}
-
-// Fungsi untuk menampilkan detail (akan buka halaman details.html dengan ID Jikan)
-function showAnimeDetails(id) {
-  window.open(`details.html?id=${id}`, '_self');
 }
