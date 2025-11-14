@@ -13,54 +13,6 @@ function showTab(tabName) {
   document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
 }
 
-// --- Fungsi untuk mendapatkan slug SankaVollerei dari judul ---
-async function getSankaSlugFromTitle(title) {
-  try {
-    const response = await fetch(`https://www.sankavollerei.com/anime/search/${encodeURIComponent(title)}`);
-    const data = await response.json();
-    if (data.data && data.data.length > 0) {
-      return data.data[0].slug; // Misal: "one-piece"
-    }
-  } catch (error) {
-    console.error("Gagal mencari slug SankaVollerei:", error);
-  }
-  return null;
-}
-
-// --- Fungsi untuk memuat link streaming dari SankaVollerei ---
-async function loadSankaStreamingLinks(slug) {
-  try {
-    const response = await fetch(`https://www.sankavollerei.com/anime/anime/${slug}`);
-    const data = await response.json();
-
-    if (!data.data || !data.data.episodes || data.data.episodes.length === 0) {
-      document.getElementById('sankaStreamingList').innerHTML = '<p>Tidak ada episode ditemukan di SankaVollerei.</p>';
-      return;
-    }
-
-    const episodeList = data.data.episodes;
-    const streamList = document.getElementById('sankaStreamingList');
-    streamList.innerHTML = '';
-
-    episodeList.forEach(ep => {
-      const epSlug = ep.slug; // Misal: "one-piece-episode-1149"
-      const link = document.createElement('a');
-      link.href = `watch.html?episodeSlug=${epSlug}`;
-      link.textContent = `Episode ${ep.title}`;
-      link.target = '_blank';
-      link.style.display = 'block';
-      link.style.margin = '0.5rem 0';
-      link.style.color = '#ff6b6b';
-      link.style.textDecoration = 'none';
-      streamList.appendChild(link);
-    });
-
-  } catch (error) {
-    console.error("Error fetching SankaVollerei streaming links:", error);
-    document.getElementById('sankaStreamingList').innerHTML = '<p>Gagal memuat link streaming SankaVollerei.</p>';
-  }
-}
-
 // --- Fungsi ambil link streaming dari Jikan ---
 async function loadStreamingLinks(id) {
   try {
@@ -92,15 +44,66 @@ async function loadStreamingLinks(id) {
   }
 }
 
+// --- Fungsi ambil link streaming dari Consumet API ---
+async function loadConsumetStreamingLinks(animeTitle) {
+  try {
+    // Gunakan judul dari Jikan untuk mencari di Consumet
+    const encodedTitle = encodeURIComponent(animeTitle);
+    const response = await fetch(`https://api.consumet.org/anime/gogoanime/${encodedTitle}`);
+    const data = await response.json();
+
+    const streamList = document.getElementById('consumetStreamingList');
+    streamList.innerHTML = '';
+
+    if (!data.results || data.results.length === 0) {
+      streamList.innerHTML = '<p>Tidak ada link streaming ditemukan di Consumet.</p>';
+      return;
+    }
+
+    // Ambil episode pertama sebagai contoh
+    const firstResult = data.results[0]; // Ambil hasil pertama dari pencarian
+    if (firstResult && firstResult.id) {
+      // Ambil ID episode untuk mendapatkan link video
+      const episodeResponse = await fetch(`https://api.consumet.org/anime/gogoanime/episode?id=${firstResult.id}`);
+      const episodeData = await episodeResponse.json();
+
+      if (episodeData.sources && episodeData.sources.length > 0) {
+        // Ambil link video pertama
+        const videoLink = episodeData.sources[0].url;
+
+        // Tampilkan video player langsung (ini bisa berisiko legalitas!)
+        streamList.innerHTML = `<video controls><source src="${videoLink}" type="video/mp4">Browser kamu tidak mendukung video.</video>`;
+
+        // ATAU, tampilkan link ke halaman watch.html dengan ID episode Consumet
+        // const watchLink = document.createElement('a');
+        // watchLink.href = `watch.html?episodeId=${firstResult.id}&source=gogoanime`;
+        // watchLink.textContent = `Episode ${firstResult.episodeNumber || '1'} (via Consumet)`;
+        // watchLink.target = '_blank'; // Lebih aman
+        // watchLink.style.display = 'block';
+        // watchLink.style.margin = '0.5rem 0';
+        // watchLink.style.color = '#ff6b6b';
+        // watchLink.style.textDecoration = 'none';
+        // streamList.appendChild(watchLink);
+      } else {
+          streamList.innerHTML = '<p>Tidak ditemukan sumber video untuk episode ini.</p>';
+      }
+    } else {
+      streamList.innerHTML = '<p>Tidak ditemukan episode untuk anime ini di Consumet.</p>';
+    }
+
+  } catch (error) {
+    console.error("Error fetching Consumet streaming links:", error);
+    document.getElementById('consumetStreamingList').innerHTML = '<p>Gagal memuat link streaming dari Consumet.</p>';
+  }
+}
+
+
 // --- Fungsi utama load detail ---
 async function loadAnimeDetails(id) {
   try {
     const response = await fetch(`https://api.jikan.moe/v4/anime/${id}`);
     const data = await response.json();
     const anime = data.data;
-
-    // Ambil slug SankaVollerei berdasarkan judul
-    const sankaSlug = await getSankaSlugFromTitle(anime.title);
 
     const genres = anime.genres ? anime.genres.map(g => g.name).join(', ') : 'Unknown';
     const detailHTML = `
@@ -117,18 +120,14 @@ async function loadAnimeDetails(id) {
     // Muat link streaming Jikan
     loadStreamingLinks(id);
 
-    // Muat link streaming SankaVollerei (jika slug ditemukan)
-    if (sankaSlug) {
-        loadSankaStreamingLinks(sankaSlug);
-    } else {
-        document.getElementById('sankaStreamingList').innerHTML = '<p>Slug SankaVollerei tidak ditemukan atau gagal diambil.</p>';
-    }
+    // Muat link streaming Consumet (menggunakan judul)
+    loadConsumetStreamingLinks(anime.title);
 
   } catch (error) {
     console.error("Error fetching details:", error);
     document.getElementById('animeDetail').innerHTML = '<p>Gagal memuat detail anime.</p>';
     document.getElementById('streamingList').innerHTML = '<p>Gagal memuat link streaming.</p>';
-    document.getElementById('sankaStreamingList').innerHTML = '<p>Gagal memuat link streaming SankaVollerei.</p>';
+    document.getElementById('consumetStreamingList').innerHTML = '<p>Gagal memuat link streaming Consumet.</p>';
   }
 }
 
@@ -138,5 +137,5 @@ if (animeId) {
 } else {
   document.getElementById('animeDetail').innerHTML = '<p>ID anime tidak ditemukan.</p>';
   document.getElementById('streamingList').style.display = 'none';
-  document.getElementById('sankaStreamingList').style.display = 'none';
+  document.getElementById('consumetStreamingList').style.display = 'none';
 }
