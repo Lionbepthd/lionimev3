@@ -12,32 +12,13 @@
       color: #fff;
       padding: 1rem;
     }
-    .video-container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
     video {
       width: 100%;
+      max-width: 800px;
       height: auto;
     }
     .loading {
       color: #aaa;
-    }
-    .server-list {
-      margin-top: 1rem;
-    }
-    .server-btn {
-      display: inline-block;
-      margin-right: 0.5rem;
-      padding: 0.5rem 1rem;
-      background-color: #2a2a2a;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .server-btn:hover {
-      background-color: #333;
     }
   </style>
 </head>
@@ -50,44 +31,36 @@
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const episodeSlug = urlParams.get('episodeSlug');
+    const episodeId = urlParams.get('episodeId');
+    const source = urlParams.get('source') || 'gogoanime'; // Default ke gogoanime
 
-    async function loadEpisode(episodeSlug) {
-      if (!episodeSlug) {
-        document.getElementById('playerContainer').innerHTML = '<p>Episode slug tidak ditemukan.</p>';
+    async function loadEpisode(episodeId, source) {
+      if (!episodeId) {
+        document.getElementById('playerContainer').innerHTML = '<p>Episode ID tidak ditemukan.</p>';
         return;
       }
 
       try {
-        const response = await fetch(`https://www.sankavollerei.com/anime/episode/${episodeSlug}`);
+        // Ambil data episode dari Consumet berdasarkan ID
+        let apiUrl = `https://api.consumet.org/anime/${source}/episode?id=${episodeId}`;
+        if(source === 'gogoanime') {
+            apiUrl = `https://api.consumet.org/anime/gogoanime/episode?id=${episodeId}`;
+        }
+        // Tambahkan else if untuk source lain jika diperlukan
+
+        const response = await fetch(apiUrl);
         const data = await response.json();
 
-        if (!data.data || !data.data.servers || data.data.servers.length === 0) {
+        if (!data.sources || data.sources.length === 0) {
           document.getElementById('playerContainer').innerHTML = '<p>Video tidak ditemukan untuk episode ini.</p>';
           return;
         }
 
-        const servers = data.data.servers;
-        const playerContainer = document.getElementById('playerContainer');
-        playerContainer.innerHTML = `<div class="video-container"><div id="videoPlayer"></div></div>`;
+        // Ambil link video pertama (bisa disesuaikan untuk kualitas)
+        const videoUrl = data.sources[0].url;
 
-        const serverListDiv = document.createElement('div');
-        serverListDiv.className = 'server-list';
-        serverListDiv.innerHTML = '<h3>Pilih Server:</h3>';
-
-        servers.forEach(server => {
-          const btn = document.createElement('button');
-          btn.className = 'server-btn';
-          btn.textContent = server.name;
-          btn.onclick = () => playVideo(server.id);
-          serverListDiv.appendChild(btn);
-        });
-
-        playerContainer.appendChild(serverListDiv);
-
-        if (servers.length > 0) {
-          playVideo(servers[0].id);
-        }
+        // Tampilkan video player
+        document.getElementById('playerContainer').innerHTML = `<video controls><source src="${videoUrl}" type="video/mp4">Browser kamu tidak mendukung video.</video>`;
 
       } catch (error) {
         console.error("Error loading episode:", error);
@@ -95,29 +68,10 @@
       }
     }
 
-    async function playVideo(serverId) {
-      try {
-        const response = await fetch(`https://www.sankavollerei.com/anime/server/${serverId}`);
-        const data = await response.json();
-
-        if (!data.data || !data.data.url) {
-          document.getElementById('videoPlayer').innerHTML = '<p>URL video tidak ditemukan.</p>';
-          return;
-        }
-
-        const videoUrl = data.data.url;
-        document.getElementById('videoPlayer').innerHTML = `<iframe src="${videoUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`;
-
-      } catch (error) {
-        console.error("Error playing video:", error);
-        document.getElementById('videoPlayer').innerHTML = '<p>Gagal memuat video.</p>';
-      }
-    }
-
-    if (episodeSlug) {
-      loadEpisode(episodeSlug);
+    if (episodeId) {
+      loadEpisode(episodeId, source);
     } else {
-      document.getElementById('playerContainer').innerHTML = '<p>Episode slug tidak ditemukan.</p>';
+      document.getElementById('playerContainer').innerHTML = '<p>Episode ID tidak ditemukan.</p>';
     }
   </script>
 </body>
