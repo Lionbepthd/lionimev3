@@ -5,6 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Detail Anime - Lionime</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Tambahkan style untuk tab */
+    .tabs {
+      display: flex;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #333;
+    }
+    .tab {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      background-color: #2a2a2a;
+      border: 1px solid #333;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      margin-right: 0.5rem;
+    }
+    .tab.active {
+      background-color: #1f1f1f;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -20,9 +46,21 @@
     <div id="animeDetail">
       <h1>Loading...</h1>
     </div>
-    <div id="streamingLinks">
+
+    <!-- Tab untuk streaming -->
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('legal')">Streaming Legal (Jikan)</div>
+      <div class="tab" onclick="showTab('otakudesu')">Streaming (Otakudesu)</div>
+    </div>
+
+    <div id="legal" class="tab-content active">
       <h2>Link Streaming Legal</h2>
       <div id="streamingList"></div>
+    </div>
+
+    <div id="otakudesu" class="tab-content">
+      <h2>Link Streaming (Otakudesu)</h2>
+      <div id="otakudesuStreamingList"></div>
     </div>
   </main>
 
