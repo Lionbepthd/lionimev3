@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nonton Episode - Lionime</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #fff;
+      padding: 1rem;
+    }
+    video {
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+    }
+    .loading {
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <a href="javascript:history.back()">← Kembali ke Detail</a>
+  <h1>Menonton Episode</h1>
+  <div id="playerContainer">
+    <p class="loading">Memuat video...</p>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const episodeId = urlParams.get('episodeId');
+
+    async function loadEpisode(episodeId) {
+      if (!episodeId) {
+        document.getElementById('playerContainer').innerHTML = '<p>Episode ID tidak ditemukan.</p>';
+        return;
+      }
+
+      try {
+        // Ambil data episode dari Otakudesu
+        const response = await fetch(`https://wajik-anime-api.vercel.app/otakudesu/episode/${episodeId}`);
+        const data = await response.json();
+
+        if (!data.data || !data.data.linkVideo || data.data.linkVideo.length === 0) {
+          document.getElementById('playerContainer').innerHTML = '<p>Video tidak ditemukan untuk episode ini.</p>';
+          return;
+        }
+
+        // Ambil link video pertama (bisa disesuaikan untuk pilihan kualitas)
+        const videoUrl = data.data.linkVideo[0].link; // Misalnya: { quality: '480p', link: 'url' }
+
+        // Tampilkan video player
+        document.getElementById('playerContainer').innerHTML = `<video controls><source src="${videoUrl}" type="video/mp4">Browser kamu tidak mendukung video.</video>`;
+
+      } catch (error) {
+        console.error("Error loading episode:", error);
+        document.getElementById('playerContainer').innerHTML = '<p>Gagal memuat video.</p>';
+      }
+    }
+
+    if (episodeId) {
+      loadEpisode(episodeId);
+    } else {
+      document.getElementById('playerContainer').innerHTML = '<p>Episode ID tidak ditemukan.</p>';
+    }
+  </script>
+</body>
+</html>
